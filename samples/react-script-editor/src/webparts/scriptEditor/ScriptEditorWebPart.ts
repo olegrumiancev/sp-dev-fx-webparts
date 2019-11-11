@@ -5,13 +5,12 @@ import { SPComponentLoader } from '@microsoft/sp-loader';
 import {
     BaseClientSideWebPart,
     IPropertyPaneConfiguration,
-    PropertyPaneCustomField,
     PropertyPaneToggle,
     PropertyPaneTextField
 } from '@microsoft/sp-webpart-base';
-import ScriptEditor from './components/ScriptEditor';
 import { IScriptEditorProps } from './components/IScriptEditorProps';
 import { IScriptEditorWebPartProps } from './IScriptEditorWebPartProps';
+import PropertyPaneLogo from './PropertyPaneLogo';
 
 export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEditorWebPartProps> {
     public save: (script: string) => void = (script: string) => {
@@ -20,40 +19,48 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
     }
 
     public render(): void {
+        if (this.displayMode == DisplayMode.Read) {
+            if (this.properties.removePadding) {
+                let element = this.domElement.parentElement;
+                // check up to 5 levels up for padding and exit once found
+                for (let i = 0; i < 5; i++) {
+                    const style = window.getComputedStyle(element);
+                    const hasPadding = style.paddingTop !== "0px";
+                    if (hasPadding) {
+                        element.style.paddingTop = "0px";
+                        element.style.paddingBottom = "0px";
+                        element.style.marginTop = "0px";
+                        element.style.marginBottom = "0px";
+                    }
+                    element = element.parentElement;
+                }
+            }
+            this.domElement.innerHTML = this.properties.script;
+            this.executeScript(this.domElement);
+        } else {
+            this.renderEditor();
+        }
+    }
+
+    private async renderEditor(){
+        // Dynamically load the editor pane to reduce overall bundle size
+        const editorPopUp = await import(
+            /* webpackChunkName: 'scripteditor' */
+            './components/ScriptEditor'
+        );
         const element: React.ReactElement<IScriptEditorProps> = React.createElement(
-            ScriptEditor,
+            editorPopUp.default,
             {
                 script: this.properties.script,
                 title: this.properties.title,
                 save: this.save
             }
         );
-
-        if (this.displayMode == DisplayMode.Read) {
-            if (this.properties.removePadding) {
-                this.domElement.parentElement.parentElement.parentElement.style.paddingTop = "0";
-                this.domElement.parentElement.parentElement.parentElement.style.paddingBottom = "0";
-            } else {
-                this.domElement.parentElement.parentElement.parentElement.style.paddingTop = "";
-                this.domElement.parentElement.parentElement.parentElement.style.paddingBottom = "";
-            }
-            this.domElement.innerHTML = this.properties.script;
-            this.executeScript(this.domElement);
-        } else {
-            ReactDom.render(element, this.domElement);
-        }
+        ReactDom.render(element, this.domElement);
     }
 
     protected get dataVersion(): Version {
         return Version.parse('1.0');
-    }
-
-    protected renderLogo(domElement: HTMLElement) {
-        domElement.innerHTML = `
-      <div style="margin-top: 30px">
-        <div style="float:right">Author: <a href="mailto:mikael.svenson@puzzlepart.com" tabindex="-1">Mikael Svenson</a></div>
-        <div style="float:right"><a href="https://www.puzzlepart.com/" target="_blank"><img src="//www.puzzlepart.com/wp-content/uploads/2017/08/Pzl-LogoType-200.png" onerror="this.style.display = \'none\'";"></a></div>
-      </div>`;
     }
 
     protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
@@ -79,10 +86,7 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
                                     onText: "Enabled",
                                     offText: "Disabled"
                                 }),
-                                PropertyPaneCustomField({
-                                    onRender: this.renderLogo,
-                                    key: "logo"
-                                })
+                                new PropertyPaneLogo()
                             ]
                         }
                     ]
@@ -120,7 +124,6 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
     private nodeName(elem, name) {
         return elem.nodeName && elem.nodeName.toUpperCase() === name.toUpperCase();
     }
-
 
     // Finds and executes scripts in a newly added element's body.
     // Needed since innerHTML does not run scripts.
@@ -165,11 +168,17 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
             window["define"].amd = null;
         }
 
+
         for (let i = 0; i < urls.length; i++) {
             try {
-                await SPComponentLoader.loadScript(urls[i], { globalExportsName: "ScriptGlobal" });
+                let scriptUrl = urls[i];
+                const prefix = scriptUrl.indexOf('?') === -1 ? '?' : '&';
+                scriptUrl += prefix + 'cow=' + new Date().getTime();
+                await SPComponentLoader.loadScript(scriptUrl, { globalExportsName: "ScriptGlobal" });
             } catch (error) {
-                console.error(error);
+                if (console.error) {
+                    console.error(error);
+                }
             }
         }
         if (oldamd) {

@@ -1,4 +1,4 @@
-﻿import pnp from "sp-pnp-js";
+﻿import {sp} from "@pnp/sp";
 import { find, indexOf, includes } from "lodash";
 import { SPPermission } from "@microsoft/sp-page-context";
 import { GraphHttpClient, HttpClientResponse, IGraphHttpClientOptions } from "@microsoft/sp-http";
@@ -178,7 +178,7 @@ export class Helpers {
       let selectedRoleAssignments: SPRoleAssignment[] = [];
 
       for (const roleAssignment of securableObject.roleAssignments) {
-        let group: SPSiteGroup = find(groups, (g) => { return g.id === roleAssignment.principalId });
+        let group: SPSiteGroup = find(groups, (g) => { return g.id === roleAssignment.principalId; });
         if (group) {
           if (this.userIsInGroup(user.id, group.id, groups)) {
             selectedRoleAssignments.push(roleAssignment);
@@ -229,7 +229,7 @@ export default class SPSecurityService {
         " </View>"
     };
 
-    return pnp.sp.web.lists.getByTitle(listTitle).getItemsByCAMLQuery(caml, "ContentType", "Folder", "Folder/ParentFolder", "File",
+    return sp.web.lists.getByTitle(listTitle).getItemsByCAMLQuery(caml, "ContentType", "Folder", "Folder/ParentFolder", "File",
       "File/ParentFolder", "RoleAssignments", "RoleAssignments/RoleDefinitionBindings", "RoleAssignments/Member",
       "RoleAssignments/Member/Users", "RoleAssignments/Member/Groups")
       .then((response) => {
@@ -262,7 +262,7 @@ export default class SPSecurityService {
           for (let roleAssignmentObject of listItem.RoleAssignments) {
 
             let roleAssignment: SPRoleAssignment = {
-              roleDefinitionIds:  roleAssignmentObject.RoleDefinitionBindings.map((rdb) => { return rdb.Id }),
+              roleDefinitionIds:  roleAssignmentObject.RoleDefinitionBindings.map((rdb) => { return rdb.Id; }),
               principalId: roleAssignmentObject.PrincipalId
             };
             // if (roleAssignmentObject.Member.UserId) {
@@ -304,9 +304,9 @@ export default class SPSecurityService {
   /// Loads data for intial display
   public loadData(showHiddenLists: boolean, showCatalogs: boolean, graphHttpClient: GraphHttpClient, forceReload: boolean): Promise<SPSecurityInfo> {
     let securityInfo: SPSecurityInfo = new SPSecurityInfo();
-    let batch: any = pnp.sp.createBatch();
+    let batch: any = sp.createBatch();
 
-    pnp.sp.web.siteUsers
+    sp.web.siteUsers
       .inBatch(batch).get().then((response) => {
         console.table(response);
         securityInfo.siteUsers = response.map((u) => {
@@ -326,10 +326,10 @@ export default class SPSecurityService {
         });
         return securityInfo.siteUsers;
       });
-    pnp.sp.web.siteGroups.expand("Users").select("Title", "Id", "IsHiddenInUI", "IsShareByEmailGuestUse", "IsSiteAdmin", "IsSiteAdmin")
+    sp.web.siteGroups.expand("Users").select("Title", "Id", "IsHiddenInUI", "IsShareByEmailGuestUse", "IsSiteAdmin", "IsSiteAdmin")
       .inBatch(batch).get().then((response) => {
         let AdGroupPromises: Array<Promise<any>> = [];
-        // if group contains an ad group(PrincipalType=4) expand it 
+        // if group contains an ad group(PrincipalType=4) expand it
         securityInfo.siteGroups = response.map((grp) => {
           let siteGroup: SPSiteGroup = new SPSiteGroup();
           siteGroup.userIds = [];
@@ -337,9 +337,9 @@ export default class SPSecurityService {
           siteGroup.title = grp.Title;
           for (let user of grp.Users) {
             if (user.PrincipalType === 4) {
-              // To make this work with AD groups, I need to stop using the integer UserId of the user as the 
+              // To make this work with AD groups, I need to stop using the integer UserId of the user as the
               // key to the Users list and use UPN/Email instead. Users in an AD group may not have a accessed the site
-              // yet , and so will not be in the userinfo list. 
+              // yet , and so will not be in the userinfo list.
               // I can get the users from the AD group using the graph HTTPClient. and add them to the Users array
               // in my state. Would also need to add a list of AD groups and their members to my state.
               // then in DoesUserHavePermission method, Just inlude permissions of any ADQ Groups the user is in.
@@ -366,7 +366,7 @@ export default class SPSecurityService {
         });
 
       });
-    pnp.sp.web.roleDefinitions.expand("BasePermissions").inBatch(batch).get().then((response) => {
+    sp.web.roleDefinitions.expand("BasePermissions").inBatch(batch).get().then((response) => {
       securityInfo.roleDefinitions = response.map((rd) => {
 
         const bp: SPBasePermissions = new SPBasePermissions(rd.BasePermissions.High, rd.BasePermissions.Low);
@@ -390,7 +390,7 @@ export default class SPSecurityService {
       filters.push("IsCatalog eq false");
     }
     let filter: string = filters.join(" and ");
-    pnp.sp.web.lists
+    sp.web.lists
       .expand("RootFolder", "RoleAssignments", "RoleAssignments/RoleDefinitionBindings", "RoleAssignments/Member",
       "RoleAssignments/Member/Users", "RoleAssignments/Member/Groups", "RoleAssignments/Member/UserId")
       .filter(filter)
@@ -410,7 +410,7 @@ export default class SPSecurityService {
           mylist.roleAssignments = listObject.RoleAssignments.map((roleAssignmentObject) => {
 
             let roleAssignment: SPRoleAssignment = {
-              roleDefinitionIds: roleAssignmentObject.RoleDefinitionBindings.map((rdb) => { return rdb.Id }),
+              roleDefinitionIds: roleAssignmentObject.RoleDefinitionBindings.map((rdb) => { return rdb.Id; }),
               principalId: roleAssignmentObject.PrincipalId
             };
             return roleAssignment;

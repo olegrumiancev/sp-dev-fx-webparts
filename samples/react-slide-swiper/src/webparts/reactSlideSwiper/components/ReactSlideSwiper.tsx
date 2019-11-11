@@ -1,12 +1,11 @@
 import * as React from 'react';
 import styles from './ReactSlideSwiper.module.scss';
 import { IReactSlideSwiperProps } from './IReactSlideSwiperProps';
-import { escape } from '@microsoft/sp-lodash-subset';
 import { IReactSlideSwiperState } from './IReactSlideSwiperState';
 import { ListItem } from '../services/ListItem';
 import Card from './Card/Card';
 
-const Swiper = require('swiper/dist/js/swiper.min');
+const Swiper: any = require('swiper/dist/js/swiper.min');
 
 export default class ReactSlideSwiper extends React.Component<IReactSlideSwiperProps, IReactSlideSwiperState> {
   
@@ -21,11 +20,12 @@ export default class ReactSlideSwiper extends React.Component<IReactSlideSwiperP
 
   public componentDidMount(): void {
 
-    this.props.listService.getAll().then((result: Array<ListItem>) => {
+    this.props.listService.getAll(this.props.listName).then((result: Array<ListItem>) => {
 
       // List items returned from the ListMock so we can
       // change the state and display them.
       this.setState({ listItems: result });
+      console.log(this.state.listItems.length);
 
       // Since we have list items rendered
       // we can call the swiper and let it
@@ -118,6 +118,7 @@ export default class ReactSlideSwiper extends React.Component<IReactSlideSwiperP
       };
     }
 
-    return new Swiper(`.container-${this.uniqueId}`, options);
+    // tslint:disable-next-line:no-unused-expression
+    new Swiper(`.container-${this.uniqueId}`, options);
   }
 }

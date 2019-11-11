@@ -19,7 +19,7 @@ export class CamlQueryHelper {
 
         // Generates the <Where /> part
         if(querySettings.filters && !isEmpty(querySettings.filters)) {
-            let sortedFilters = querySettings.filters.sort((a, b) => { if(a.index > b.index) { return 1; } else { return 0; } });
+            let sortedFilters = querySettings.filters.sort((a, b) => { return a.index - b.index; });
             query += Text.format('<Where>{0}</Where>', this.generateFilters(sortedFilters));
         }
 
@@ -62,12 +62,13 @@ export class CamlQueryHelper {
         
         // Store the generic filter format for later use
         let query = '';
-        let filterXml = '<{0}><FieldRef Name="{1}" /><Value {2} Type="{3}">{4}</Value></{0}>';
+        let filterXml = '';
 
         // Appends a CAML node for each filter
         let itemCount = 0;
 
         for(let filter of filters.reverse()) {
+            filterXml = '<{0}><FieldRef Name="{1}" /><Value {2} Type="{3}">{4}</Value></{0}>';
             itemCount++;
             let specialAttribute = '';
 

@@ -134,7 +134,13 @@ export class ContentQueryService implements IContentQueryService {
         return new Promise<string>((resolve,reject) => {
             this.spHttpClient.get(fileUrl, SPHttpClient.configurations.v1).then((response: SPHttpClientResponse) => {
                 if(response.ok) {
-                    resolve(response.text());
+                    if(response.url.indexOf('AccessDenied.aspx') > -1){
+                        reject('Access Denied');
+                    }
+                    else
+                    {
+                        resolve(response.text());
+                    }                    
                 }
                 else {
                     reject(response.statusText);
@@ -559,13 +565,14 @@ export class ContentQueryService implements IContentQueryService {
 
         for(let result of results) {
             let normalizedResult: any = {};
+            let formattedCharsRegex = /_x00(20|3a)_/gi;
 
             for(let viewField of viewFields) {
-                let spacesFormattedName = viewField.replace(new RegExp("_x0020_", "g"), "_x005f_x0020_x005f_");
+                let formattedName = viewField.replace(formattedCharsRegex, "_x005f_x00$1_x005f_");
 
                 normalizedResult[viewField] = {
-                    textValue: result.FieldValuesAsText[spacesFormattedName],
-                    htmlValue: result.FieldValuesAsHtml[spacesFormattedName],
+                    textValue: result.FieldValuesAsText[formattedName],
+                    htmlValue: result.FieldValuesAsHtml[formattedName],
                     rawValue: result[viewField] || result[viewField + 'Id']
                 };
             }

@@ -27,6 +27,10 @@ react-skype-status|[Vincent Biret](https://github.com/baywet)
 
 Version|Date|Comments
 -------|----|--------
+1.4|March 27th, 2019|Upgrade to SPFx 1.8.0
+1.3|November 18th, 2018|Upgrade to SPFX 1.7.0
+1.2|July 4th, 2018|Fixed a bug when subscribing to the current user's status
+1.1|June 25th, 2018|Upgrade to 1.5
 1.0|December 1, 2017|Initial release
 
 ## Disclaimer
@@ -49,7 +53,7 @@ Take note of the `application ID`, we'll need it later. Click on `required permi
 ![skype permission](./images/5.PNG)  
 Click on `add` then `select an API` and select `Skype for Business`.  
 ![skype scopes](./images/6.PNG)  
-Select under `delegated permissions` both `Read/Write Skype user contacts and groups` and `Read/Write Skype user information (preview)`, then click `select`. Finish by clicking `Done`.  
+Select under `delegated permissions` both `Read/Write Skype user contacts and groups`,  `Read/Write Skype user information (preview)`, `Receive conversation invites (preview)` (the receive conversation permission is required to get access to the mePerson object and have access to the current user's presence information) then click `select`. Finish by clicking `Done`.  
 ![grant permission](./images/7.PNG)  
 Don't forget to click on `Grant permissions` and `yes`.
 

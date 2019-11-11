@@ -4,7 +4,7 @@
 
 This sub folders contains a client-side project that is related to the tutorial available at the following URL: https://docs.microsoft.com/en-us/sharepoint/dev/spfx/use-aad-tutorial
 
-![The UI of the sample application](./images/use-aad-tutorial-video.gif)
+![The UI of the sample application](./images/api-scopes.gif)
 
 ## Solution
 
@@ -16,6 +16,7 @@ This sub folders contains a client-side project that is related to the tutorial 
 
 | Version  | Date | Comments |
 | ------------- | ------------- | ------------- |
+| 1.0.0  | August 28th 2018     | Updated sample to SPFx v1.6.0 |
 | 1.0.0  | February 18th 2018   | Initial release |
 
 ## Disclaimer
